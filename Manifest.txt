@@ -1,0 +1,14 @@
+History.txt
+Manifest.txt
+README.txt
+Rakefile
+lib/amazon_sds.rb
+lib/amazon_sds/base.rb
+lib/amazon_sds/domain.rb
+lib/amazon_sds/item.rb
+lib/amazon_sds/multimap.rb
+lib/amazon_sds/resultset.rb
+test/test_amazon_base.rb
+test/test_amazon_domain.rb
+test/test_sds_harness.rb
+test/test_multimap.rb
