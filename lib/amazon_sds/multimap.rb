@@ -1,10 +1,22 @@
 module Amazon
   module SDS
     ##
-    # A multimap is like a hash or set, but it only requires that key/value pair is unique (the same key may have multiple values)
+    # A multimap is like a hash or set, but it only requires that key/value pair is unique (the same key may have multiple values).
+    # Multimaps may be created by the user to send into Amazon SDS or they may be read back from SDS as the attributes for an object.
+    #
+    # For your convenience, multimap's initializer can take several types of input parameters:
+    # - A hash of key/value pairs (for when you want keys to be unique)
+    # - An array of key/value pairs represented as 2-member arrays
+    # - Another multimap
+    # - Or nothing at all (an empty set)
     class Multimap
       include Enumerable
       
+      ##
+      # To be honest, floats are difficult for SDS. In order to work with lexical comparisons, you need to save floats as strings padded to the same size.
+      # The problem is, automatic conversion can run afoul of rounding errors if it has a larger precision than the original float, 
+      # so for the short term I've provided the numeric helper method for saving floats as strings into the multimap (when read back from
+      # SDS they will still be converted from floats). To use, specify the precision you want to represent as well as the total size (pick something large like 32 to be safe)
       def self.numeric(float, size, precision)
         sprintf "%0#{size}.#{precision}f", float
       end
@@ -36,6 +48,8 @@ module Amazon
         @size = nil
       end
       
+      ##
+      # Returns the size of the multimap. This is the total number of key/value pairs in it.
       def size
         if @size.nil?
           @size = @mset.inject(0) do |total, pair|
@@ -51,6 +65,9 @@ module Amazon
         @size
       end
 
+      ##
+      # Save a key/value attribute into the multimap. Takes additional options
+      # - <tt>:replace => true</tt> remove any attributes with the same key before insert (otherwise, appends)
       def put(key_arg, value, options = {})
         key = key_arg.to_s
 
@@ -89,14 +106,20 @@ module Amazon
         end
       end
 
+      ##
+      # Shortcut for #get
       def [](key)
         get(key)
       end
       
+      ##
+      # Shortcut for put(key, value, :replace => true)
       def []=(key, value)
         put(key, value, :replace => true)
       end
 
+      ##
+      # Support for Enumerable. Yields each key/value pair as an array of 2 members.
       def each
         @mset.each_pair do |key, group| 
           group.to_a.each do |value|
@@ -105,6 +128,8 @@ module Amazon
         end    
       end
 
+      ##
+      # Yields each key/value pair as separate parameters to the block.
       def each_pair
         @mset.each_pair do |key, group|
           case group
@@ -118,7 +143,9 @@ module Amazon
         end
       end
 
-      def each_pair_with_index(&block)
+      ##
+      # Yields each pair as separate key/value plus an index.
+      def each_pair_with_index
         index = 0
         self.each_pair do |key, value|
           yield key, value, index
@@ -150,10 +177,12 @@ module Amazon
         when Time
           value.iso8601
         else
-          value.to_s
+          string_escape(value.to_s)
         end
       end
 
+      ##
+      # Outputs a multimap to SDS using Amazon's query-string notation (and doing auto-conversions of int and date values)
       def to_sds
         out = {}
         self.each_pair_with_index do |key, value, index|
@@ -163,24 +192,6 @@ module Amazon
 
         out
       end
-
-      # def self.integer(*params)
-      #   params.each do |p|
-      #     integer_fields[p.to_s] = 1
-      #   end
-      # end
-      # 
-      # def self.float(*params)
-      #   params.each do |p|
-      #     float_fields[p.to_s] = 1
-      #   end
-      # end
-      # 
-      # def self.datetime(*params)
-      #   params.each do |p|
-      #     datetime_fields[p.to_s] = 1
-      #   end
-      # end
 
       def coerce(value)
         case value
@@ -214,6 +225,20 @@ module Amazon
         else
           raise ArgumentError, "Wrong type passed as initializer"
         end
+      end
+      
+      ##
+      # Returns the multimap as an array of 2-item arrays, one for each key-value pair
+      def to_a
+        out = []
+        each_pair {|k, v| out << [k, v] }
+        out
+      end
+      
+      ##
+      # Returns the multimap as a hash. In cases where there are multiple values for a key, it puts all the values into an array. 
+      def to_h
+        @mset.dup
       end
       
       def method_missing(method_symbol, *args)

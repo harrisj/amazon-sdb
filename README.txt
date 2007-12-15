@@ -1,26 +1,51 @@
 amazon_sds
-    by FIX (your name)
-    FIX (url)
+by Jacob Harris
+jharris@nytimes.com
+http://open.nytimes.com/
 
 == DESCRIPTION:
   
-FIX (describe your package)
+Amazon SDS is a Ruby wrapper to Amazon's new Simple Database Service. Amazon SDS is a different type of database:
+
+* Accessed over the network via RESTful calls
+* No schemas or types
+* Each SDS account can have up to 100 domains for data.
+* Domains can hold objects referenced by unique keys
+* Each object can hold up to 256 name/value attributes.
+* Only name/value pairs must be unique in an objects attributes, there can be multiple name/value attributes with the same name.
+* In addition to key-driven accessors, objects can also be searched with a basic query language.
+* All value are stored as strings and comparisons use lexical order. Thus, it is necessary to pad integers and floats with 0s and save dates in ISO 8601 format for query comparisons to work
 
 == FEATURES/PROBLEMS:
   
-* FIX (list of features or problems)
+* A basic interface to Amazon SDS
+* Includes a class for representing attribute sets in SDS
+* Automatic conversion to/from SDS representations for integers and dates (for floats, it's suggested you use the Multimap#numeric function)
+* The beginnings of mock-based tests for methods derived from Amazon's docs
+
+== FUTURE WORK:
+
+* Some sort of fake SQL-esque query language
+* Some sort of AR/Datamapper/Ambition connection layer fun (with schema overlays)
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+  b = Amazon::SDS::Base.new(aws_public_key, aws_secret_key)
+	b.domains #=> list of domain
+	domain = b.create_domain 'my domain'
+	
+	m = Multimap.new {:first_name => "Jacob", :last_name => "Harris"}
+	domain.put_attributes "Jacob Harris", m
+	resultset = domain.query "['first_name' begins-with 'Harris']"
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+* An Amazon Web Services account
+* hpricot
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+* sudo gem install amazon_sds
 
 == LICENSE:
 

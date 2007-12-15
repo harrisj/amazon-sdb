@@ -13,9 +13,7 @@ module Amazon
         super(aws_access_key, aws_secret_key)
         @name = name
       end
-      
-      ##
-      # ::nodoc::
+
       def base_path
         'http://sds.amazonaws.com/' + @name + '/'
       end
@@ -55,6 +53,11 @@ module Amazon
         end
       end
       
+      ##
+      # Gets the attribute list for a key. Arguments:
+      # - <tt>key</tt> - the key for the attribute set
+      # - <tt>*attr_list</tt> - if you are only interested in specifically named attributes you can specify them here. Otherwise returns all attributes
+      # Attributes are returned in a multimap.
       def get_attributes(key, *attr_list)
         options = {'Action' => 'Get'}
         
@@ -78,9 +81,9 @@ module Amazon
           end
         end
       end
-      
+
       ##
-      # Currently not implemented
+      # Not implemented yet.
       def delete_attributes(key, multimap=nil)
         options = {'Action' => 'Delete'}
         

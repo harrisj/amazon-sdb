@@ -1,7 +1,8 @@
 module Amazon
   module SDS
     ##
-    # Need to write docs
+    # An item from SDS. This basically is a key for the item in the domain and a Multimap of the attributes. You should never
+    # call Item#new, instead it is returned by various methods in Domain and ResultSet
     class Item
       include Enumerable
       attr_accessor :key, :attributes

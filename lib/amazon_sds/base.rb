@@ -94,20 +94,14 @@ module Amazon
         end       
       end
 
-      ##
-      # ::nodoc::
       def timestamp
         Time.now.iso8601
       end
 
-      ##
-      # ::nodoc::
       def self.hmac(key, msg) 
         Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::Digest.new('sha1'), key, msg))
       end
 
-      ##
-      # ::nodoc::
       def sds_query(base_url, options    = {})
         options.merge!({'AWSAccessKeyId' => @access_key,
           'SignatureVersion'             => SIGNATURE_VERSION,
@@ -127,14 +121,10 @@ module Amazon
         end
       end
 
-      ##
-      # ::nodoc::
       def self.uriencode(str)
         CGI.escape str.to_s
       end
 
-      ##
-      # ::nodoc::
       def self.sign(key, query_options)
         option_array = query_options.to_a.map {|pair| [pair[0].to_s, pair[1].to_s]}.sort {|a, b| a[0].downcase <=> b[0].downcase }
         return hmac(key, option_array.map {|pair| pair[0]+pair[1]}.join('')).chop
