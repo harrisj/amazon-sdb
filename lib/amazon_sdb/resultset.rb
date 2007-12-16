@@ -1,5 +1,5 @@
 module Amazon
-  module SDS
+  module SDB
     
     ##
     # Represents a ResultSet returned from Domain#query. Currently, this is just

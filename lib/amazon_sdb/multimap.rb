@@ -1,8 +1,8 @@
 module Amazon
-  module SDS
+  module SDB
     ##
     # A multimap is like a hash or set, but it only requires that key/value pair is unique (the same key may have multiple values).
-    # Multimaps may be created by the user to send into Amazon SDS or they may be read back from SDS as the attributes for an object.
+    # Multimaps may be created by the user to send into Amazon sdb or they may be read back from sdb as the attributes for an object.
     #
     # For your convenience, multimap's initializer can take several types of input parameters:
     # - A hash of key/value pairs (for when you want keys to be unique)
@@ -13,10 +13,10 @@ module Amazon
       include Enumerable
       
       ##
-      # To be honest, floats are difficult for SDS. In order to work with lexical comparisons, you need to save floats as strings padded to the same size.
+      # To be honest, floats are difficult for sdb. In order to work with lexical comparisons, you need to save floats as strings padded to the same size.
       # The problem is, automatic conversion can run afoul of rounding errors if it has a larger precision than the original float, 
       # so for the short term I've provided the numeric helper method for saving floats as strings into the multimap (when read back from
-      # SDS they will still be converted from floats). To use, specify the precision you want to represent as well as the total size (pick something large like 32 to be safe)
+      # sdb they will still be converted from floats). To use, specify the precision you want to represent as well as the total size (pick something large like 32 to be safe)
       def self.numeric(float, size, precision)
         sprintf "%0#{size}.#{precision}f", float
       end
@@ -157,7 +157,7 @@ module Amazon
         str.gsub("\\", "\\\\").gsub("'", "\\'")
       end
       
-      def sds_key_escape(key)
+      def sdb_key_escape(key)
         case key
         when String
           string_escape(key)
@@ -166,7 +166,7 @@ module Amazon
         end
       end
 
-      def sds_value_escape(value)
+      def sdb_value_escape(value)
         case value
         when Fixnum
           sprintf("%0#{Base.number_padding}d", value)
@@ -182,12 +182,12 @@ module Amazon
       end
 
       ##
-      # Outputs a multimap to SDS using Amazon's query-string notation (and doing auto-conversions of int and date values)
-      def to_sds
+      # Outputs a multimap to sdb using Amazon's query-string notation (and doing auto-conversions of int and date values)
+      def to_sdb
         out = {}
         self.each_pair_with_index do |key, value, index|
-          out["Name#{index}"] = sds_key_escape(key)
-          out["Value#{index}"] = sds_value_escape(value)
+          out["Name#{index}"] = sdb_key_escape(key)
+          out["Value#{index}"] = sdb_value_escape(value)
         end
 
         out
@@ -206,7 +206,7 @@ module Amazon
         end
       end
       
-      def from_sds(values)
+      def from_sdb(values)
         @mset = {}
         clear_size!
 

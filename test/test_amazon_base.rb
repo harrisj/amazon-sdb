@@ -1,8 +1,8 @@
-require 'test_sds_harness'
+require 'test_sdb_harness'
 
 class TestAmazonBase < Test::Unit::TestCase
   def setup
-    @sds = Amazon::SDS::Base.new 'API_KEY', 'SECRET_KEY' 
+    @sdb = Amazon::SDB::Base.new 'API_KEY', 'SECRET_KEY' 
   end
     
   def test_sign
@@ -17,23 +17,23 @@ class TestAmazonBase < Test::Unit::TestCase
       'Version' => '2006-08-11'
     }
 
-    signature = Amazon::SDS::Base.sign('secret_key', options)
+    signature = Amazon::SDB::Base.sign('secret_key', options)
     assert_equal 'xlrD17jnkGk6E3nVVOV3Qon3Nwg=', signature
   end
   
   def test_domains
-    @sds.responses << <<-EOF
+    @sdb.responses << <<-EOF
     <?xml version="1.0" encoding="utf-8" ?>
-    <ListDomainsResponse xmlns="https://sds.amazonaws.com/doc/2006-08-11/"> <Domains> 
+    <ListDomainsResponse xmlns="https://sdb.amazonaws.com/doc/2006-08-11/"> <Domains> 
     <Domain><Name>foo</Name></Domain> <Domain><Name>bar</Name></Domain> 
     <Domain><Name>baz</Name></Domain> </Domains>
     </ListDomainsResponse>
     EOF
     
-    domains = @sds.domains
+    domains = @sdb.domains
 
-    assert_equal 1, @sds.uris.length
-    #assert_uri_param    @sds.uris.first
+    assert_equal 1, @sdb.uris.length
+    #assert_uri_param    @sdb.uris.first
 
     assert_equal 3, domains.size
     %w(foo bar baz).each_with_index do |name, index|
@@ -42,25 +42,25 @@ class TestAmazonBase < Test::Unit::TestCase
   end
   
   def test_domains_more
-    @sds.responses << <<-EOF
+    @sdb.responses << <<-EOF
     <?xml version="1.0" encoding="utf-8" ?>
-    <ListDomainsResponse xmlns="https://sds.amazonaws.com/doc/2006-08-11/"> <Domains> 
+    <ListDomainsResponse xmlns="https://sdb.amazonaws.com/doc/2006-08-11/"> <Domains> 
     <Domain><Name>foo</Name></Domain><Domain><Name>bar</Name></Domain> 
     <MoreToken>FOOBAR</MoreToken></Domains>
     </ListDomainsResponse>    
     EOF
     
-    @sds.responses << <<-EOF
+    @sdb.responses << <<-EOF
     <?xml version="1.0" encoding="utf-8" ?>
-    <ListDomainsResponse xmlns="https://sds.amazonaws.com/doc/2006-08-11/"> <Domains> 
+    <ListDomainsResponse xmlns="https://sdb.amazonaws.com/doc/2006-08-11/"> <Domains> 
     <Domain><Name>baz</Name></Domain></Domains>
     </ListDomainsResponse>    
     EOF
     
-    domains = @sds.domains
+    domains = @sdb.domains
     
-    assert_equal 2, @sds.uris.length, "Should make 2 requests to SDS"
-    assert_in_url_query({'MoreToken' => 'FOOBAR'}, @sds.uris.last)
+    assert_equal 2, @sdb.uris.length, "Should make 2 requests to sdb"
+    assert_in_url_query({'MoreToken' => 'FOOBAR'}, @sdb.uris.last)
     
     assert_equal 3, domains.size, "Should return 3 domains"
     %w(foo bar baz).each_with_index do |name, index|
@@ -72,14 +72,19 @@ class TestAmazonBase < Test::Unit::TestCase
   end
   
   def test_create_domain
-    @sds.responses << <<-EOF
+    @sdb.responses << <<-EOF
     <?xml version="1.0" encoding="utf-8" ?>
-    <CreateDomainResponse xmlns="https://sds.amazonaws.com/doc/2006-08-11/"><Success/></CreateDomainResponse>
+    <CreateDomainResponse xmlns="http://sdb.amazonaws.com/doc/2007-11-07"> 
+    <ResponseMetadata> 
+    <RequestId>2a1305a2-ed1c-43fc-b7c4-e6966b5e2727</RequestId> 
+    <BoxUsage>0.0000219907</BoxUsage> 
+    </ResponseMetadata> 
+    </CreateDomainResponse>
     EOF
 
-    domain = @sds.create_domain('foobar')
-    assert_equal 1, @sds.uris.length
-    assert_in_url_query({'Action' => 'Create', 'Name' => 'foobar'}, @sds.uris.first)
+    domain = @sdb.create_domain('foobar')
+    assert_equal 1, @sdb.uris.length
+    assert_in_url_query({'Action' => 'Create', 'Name' => 'foobar'}, @sdb.uris.first)
     
     assert_equal 'foobar', domain.name
   end

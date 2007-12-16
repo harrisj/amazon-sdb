@@ -1,9 +1,9 @@
 module Amazon
-  module SDS
+  module SDB
     
     ##
-    # Each SDS account can have up to 100 domains. This class represents a single domain and may be instantiated either indirectly
-    # from the Amazon::SDS::Base class or via the Domain#initialize method.
+    # Each sdb account can have up to 100 domains. This class represents a single domain and may be instantiated either indirectly
+    # from the Amazon::sdb::Base class or via the Domain#initialize method.
     class Domain < Base
       attr_reader :name
       
@@ -15,7 +15,7 @@ module Amazon
       end
 
       def base_path
-        'http://sds.amazonaws.com/' + @name + '/'
+        'http://sdb.amazonaws.com/' + @name + '/'
       end
       
       def item_path(key)
@@ -36,14 +36,14 @@ module Amazon
         end
         
         unless multimap.nil?
-          options.merge! multimap.to_sds
+          options.merge! multimap.to_sdb
         end
         
         if mode == :replace
           options.merge!({'Replace' => 'true'})
         end
         
-        sds_query(item_path(key), options) do |h|
+        sdb_query(item_path(key), options) do |h|
           # check for success?
           if h.search('//Success').any?
             return Item.new(self, key, multimap)
@@ -67,7 +67,7 @@ module Amazon
           end
         end
         
-        sds_query(item_path(key), options) do |h|
+        sdb_query(item_path(key), options) do |h|
           attr_nodes = h.search('//Attributes/Attribute')
           attr_array = []
           attr_nodes.each do |a|
@@ -91,7 +91,7 @@ module Amazon
         
         end
         
-        sds_query(item_path(key), options) do |h|
+        sdb_query(item_path(key), options) do |h|
           if h.search('//Success').any?
             return true
           end
@@ -119,7 +119,7 @@ module Amazon
           req_options['MaxResults'] = list_options[:max_results]
         end
         
-        sds_query(base_path, req_options) do |h|
+        sdb_query(base_path, req_options) do |h|
           more_token = nil
           results = h.search('/ListItemsResponse/Items/Item/Name')
           items = results.map {|n| Item.new(self, n.innerText) }

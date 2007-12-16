@@ -1,7 +1,7 @@
-require "test_sds_harness"
+require "test_sdb_harness"
 
 class TestMultimap < Test::Unit::TestCase
-  include Amazon::SDS
+  include Amazon::sdb
   
   def setup
     @m = Multimap.new
@@ -96,13 +96,13 @@ class TestMultimap < Test::Unit::TestCase
   
   def test_fixnum_padding
     @m['Num'] = 12
-    Amazon::SDS::Base.number_padding = 6
+    Amazon::SDB::Base.number_padding = 6
     
-    assert_equal '000012', @m.to_sds['Value0']
+    assert_equal '000012', @m.to_sdb['Value0']
   end
   
   def test_numeric
-    @m['Num'] = Amazon::SDS::Multimap.numeric(12.34, 10, 4)
+    @m['Num'] = Amazon::SDB::Multimap.numeric(12.34, 10, 4)
     assert_equal '00012.3400', @m['Num']
   end
     
@@ -118,7 +118,7 @@ class TestMultimap < Test::Unit::TestCase
   end
   
   def test_method_missing_get_before_cast
-    @m.from_sds([["foo","0000000000000000023"]])
+    @m.from_sdb([["foo","0000000000000000023"]])
     
     assert_equal 23, @m.foo
     assert_equal "0000000000000000023", @m.foo_before_cast
@@ -126,7 +126,7 @@ class TestMultimap < Test::Unit::TestCase
   
   def test_coerce_int
     m = Multimap.new
-    m.from_sds([["a", "00000000023"],["b", "1992"]])
+    m.from_sdb([["a", "00000000023"],["b", "1992"]])
     
     assert_equal 23, m["a"]
     assert_equal "00000000023", m.get("a", :before_cast => true)
@@ -135,7 +135,7 @@ class TestMultimap < Test::Unit::TestCase
   
   def test_coerce_float
     m = Multimap.new
-    m.from_sds([["a", "0000000000034.3400000000"]])
+    m.from_sdb([["a", "0000000000034.3400000000"]])
     
     assert_in_delta(34.34, m["a"], 2 ** -20)
     assert_equal "0000000000034.3400000000", m.get("a", :before_cast => true)
@@ -145,7 +145,7 @@ class TestMultimap < Test::Unit::TestCase
     now = Time.now
     
     m = Multimap.new
-    m.from_sds([["a", now.iso8601]])
+    m.from_sdb([["a", now.iso8601]])
     assert_equal now.to_s, m["a"].to_s
     assert_instance_of(Time, m["a"])
   end

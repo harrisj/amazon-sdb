@@ -31,7 +31,7 @@ require 'amazon_sds/item'
 require 'amazon_sds/resultset'
 
 module Amazon
-  module SDS
+  module SDB
     VERSION = '0.5.0'    
   end
 end

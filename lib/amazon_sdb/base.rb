@@ -1,5 +1,5 @@
 module Amazon
-  module SDS
+  module SDB
     SIGNATURE_VERSION = '1'
     API_VERSION = '2006-08-11'
     

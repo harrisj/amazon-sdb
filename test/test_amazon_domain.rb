@@ -1,12 +1,12 @@
-require 'test_sds_harness'
+require 'test_sdb_harness'
 
 class TestAmazonDomain < Test::Unit::TestCase
   def setup
-    @domain = Amazon::SDS::Domain.new 'API_KEY', 'SECRET_KEY', 'testdb'
+    @domain = Amazon::SDB::Domain.new 'API_KEY', 'SECRET_KEY', 'testdb'
   end
   
   def test_get_attributes
-    domain = @sds
+    domain = @sdb
   end
   
   def test_list_items    
@@ -31,7 +31,7 @@ class TestAmazonDomain < Test::Unit::TestCase
   end
   
   def test_list_items_load
-    @domain.responses << '<ListItemsResponse xmlns="https://sds.amazonaws.com/doc/2006-08-11/"><Items><Item><Name>item1</Name></Item></Items></ListItemsResponse>'
+    @domain.responses << '<ListItemsResponse xmlns="https://sdb.amazonaws.com/doc/2006-08-11/"><Items><Item><Name>item1</Name></Item></Items></ListItemsResponse>'
     @domain.responses << GET_ATTRIBUTES_RESPONSE
     
     @domain.list_items :load_attrs => true
