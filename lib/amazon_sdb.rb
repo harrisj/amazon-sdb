@@ -16,23 +16,24 @@ $:.unshift(File.dirname(__FILE__)) unless
 
 unless defined?(Amazon::SDS)
   begin
-    $:.unshift(File.dirname(__FILE__) + "/../../amazon_sds/lib")
-    require 'amazon_sds'  
+    $:.unshift(File.dirname(__FILE__) + "/../../amazon_sdb/lib")
+    require 'amazon_sdb'  
   rescue LoadError
     require 'rubygems'
-    gem 'amazon_sds'
+    gem 'amazon_sdb'
   end
 end
 
-require 'amazon_sds/multimap'
-require 'amazon_sds/base'
-require 'amazon_sds/domain'
-require 'amazon_sds/item'
-require 'amazon_sds/resultset'
+require 'amazon_sdb/multimap'
+require 'amazon_sdb/base'
+require 'amazon_sdb/domain'
+require 'amazon_sdb/item'
+require 'amazon_sdb/resultset'
+require 'amazon_sdb/exceptions'
 
 module Amazon
   module SDB
-    VERSION = '0.5.0'    
+    VERSION = '0.5.5'    
   end
 end
 

@@ -1,7 +1,7 @@
 require "test_sdb_harness"
 
 class TestMultimap < Test::Unit::TestCase
-  include Amazon::sdb
+  include Amazon::SDB
   
   def setup
     @m = Multimap.new

@@ -186,8 +186,8 @@ module Amazon
       def to_sdb
         out = {}
         self.each_pair_with_index do |key, value, index|
-          out["Name#{index}"] = sdb_key_escape(key)
-          out["Value#{index}"] = sdb_value_escape(value)
+          out["Attribute.#{index}.Name"] = sdb_key_escape(key)
+          out["Attribute.#{index}.Value"] = sdb_value_escape(value)
         end
 
         out

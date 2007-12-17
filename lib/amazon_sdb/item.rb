@@ -18,6 +18,10 @@ module Amazon
         @attributes = item.attributes
       end
       
+      def empty?
+        @attributes.size == 0
+      end
+      
       def destroy!
         @domain.delete_attributes(@key)
       end

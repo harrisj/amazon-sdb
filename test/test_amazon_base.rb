@@ -21,19 +21,43 @@ class TestAmazonBase < Test::Unit::TestCase
     assert_equal 'xlrD17jnkGk6E3nVVOV3Qon3Nwg=', signature
   end
   
+  def test_cgi_encode
+    options = {'foo' => 'bar'}
+  
+    assert_equal 'foo=bar', @sdb.cgi_encode(options)
+  end
+  
+  def test_cgi_encode_escapes
+    options = {'a\'b' => 'c\\d'}
+    
+    assert_equal 'a\\\'b=c\\\\d', @sdb.cgi_encode(options)
+  end
+  
+  def test_cgi_encode_array
+    options = {"foo" => ["bar", "baz"]}
+    assert_equal 'foo=bar&foo=baz', @sdb.cgi_encode(options)
+  end
+  
   def test_domains
     @sdb.responses << <<-EOF
     <?xml version="1.0" encoding="utf-8" ?>
-    <ListDomainsResponse xmlns="https://sdb.amazonaws.com/doc/2006-08-11/"> <Domains> 
-    <Domain><Name>foo</Name></Domain> <Domain><Name>bar</Name></Domain> 
-    <Domain><Name>baz</Name></Domain> </Domains>
-    </ListDomainsResponse>
+    <ListDomainsResponse xmlns="http://sdb.amazonaws.com/doc/2007-11-07"> 
+    <ListDomainsResult> 
+    <DomainName>foo</DomainName> 
+    <DomainName>bar</DomainName>
+    <DomainName>baz</DomainName> 
+    </ListDomainsResult> 
+    <ResponseMetadata> 
+    <RequestId>eb13162f-1b95-4511-8b12-489b86acfd28</RequestId> 
+    <BoxUsage>0.0000219907</BoxUsage> 
+    </ResponseMetadata> 
+    </ListDomainsResponse> 
     EOF
     
     domains = @sdb.domains
 
     assert_equal 1, @sdb.uris.length
-    #assert_uri_param    @sdb.uris.first
+    assert_in_url_query({'Action' => 'ListDomains'}, @sdb.uris.first)
 
     assert_equal 3, domains.size
     %w(foo bar baz).each_with_index do |name, index|
@@ -44,23 +68,36 @@ class TestAmazonBase < Test::Unit::TestCase
   def test_domains_more
     @sdb.responses << <<-EOF
     <?xml version="1.0" encoding="utf-8" ?>
-    <ListDomainsResponse xmlns="https://sdb.amazonaws.com/doc/2006-08-11/"> <Domains> 
-    <Domain><Name>foo</Name></Domain><Domain><Name>bar</Name></Domain> 
-    <MoreToken>FOOBAR</MoreToken></Domains>
-    </ListDomainsResponse>    
+    <ListDomainsResponse xmlns="http://sdb.amazonaws.com/doc/2007-11-07"> 
+    <ListDomainsResult> 
+    <DomainName>foo</DomainName> 
+    <DomainName>bar</DomainName>
+    <NextToken>FOOBAR</NextToken> 
+    </ListDomainsResult> 
+    <ResponseMetadata> 
+    <RequestId>eb13162f-1b95-4511-8b12-489b86acfd28</RequestId> 
+    <BoxUsage>0.0000219907</BoxUsage> 
+    </ResponseMetadata> 
+    </ListDomainsResponse> 
     EOF
     
     @sdb.responses << <<-EOF
     <?xml version="1.0" encoding="utf-8" ?>
-    <ListDomainsResponse xmlns="https://sdb.amazonaws.com/doc/2006-08-11/"> <Domains> 
-    <Domain><Name>baz</Name></Domain></Domains>
-    </ListDomainsResponse>    
+    <ListDomainsResponse xmlns="http://sdb.amazonaws.com/doc/2007-11-07"> 
+    <ListDomainsResult> 
+    <DomainName>baz</DomainName> 
+    </ListDomainsResult> 
+    <ResponseMetadata> 
+    <RequestId>eb13162f-1b95-4511-8b12-489b86acfd28</RequestId> 
+    <BoxUsage>0.0000219907</BoxUsage> 
+    </ResponseMetadata> 
+    </ListDomainsResponse> 
     EOF
     
     domains = @sdb.domains
     
     assert_equal 2, @sdb.uris.length, "Should make 2 requests to sdb"
-    assert_in_url_query({'MoreToken' => 'FOOBAR'}, @sdb.uris.last)
+    assert_in_url_query({'NextToken' => 'FOOBAR'}, @sdb.uris.last)
     
     assert_equal 3, domains.size, "Should return 3 domains"
     %w(foo bar baz).each_with_index do |name, index|
@@ -72,24 +109,34 @@ class TestAmazonBase < Test::Unit::TestCase
   end
   
   def test_create_domain
-    @sdb.responses << <<-EOF
-    <?xml version="1.0" encoding="utf-8" ?>
-    <CreateDomainResponse xmlns="http://sdb.amazonaws.com/doc/2007-11-07"> 
-    <ResponseMetadata> 
-    <RequestId>2a1305a2-ed1c-43fc-b7c4-e6966b5e2727</RequestId> 
-    <BoxUsage>0.0000219907</BoxUsage> 
-    </ResponseMetadata> 
-    </CreateDomainResponse>
-    EOF
+    @sdb.responses << generic_response('CreateDomain')
 
     domain = @sdb.create_domain('foobar')
     assert_equal 1, @sdb.uris.length
-    assert_in_url_query({'Action' => 'Create', 'Name' => 'foobar'}, @sdb.uris.first)
+    assert_in_url_query({'Action' => 'CreateDomain', 'DomainName' => 'foobar'}, @sdb.uris.first)
     
     assert_equal 'foobar', domain.name
   end
   
-  def test_create_domain_fail
+  def test_create_domain_invalid_param
+    @sdb.responses << error_response('InvalidParameterValue', 'Value (X) for parameter DomainName is invalid.')
+
+    assert_raise(Amazon::SDB::InvalidParameterError) { @sdb.create_domain('(X)') }
+    assert_equal 1, @sdb.uris.length
+  end
+  
+  def test_create_domain_limit_error
+    @sdb.responses << error_response('NumberDomainsExceeded', 'Domain Limit reached')
+    
+    assert_raise(Amazon::SDB::DomainLimitError) { @sdb.create_domain('foo') }
+  end
+  
+  def test_delete_domain
+    @sdb.responses << generic_response('DeleteDomain')
+    
+    @sdb.delete_domain!('foo')
+    assert_equal 1, @sdb.uris.length
+    assert_in_url_query({'Action' => 'DeleteDomain', 'DomainName' => 'foo'}, @sdb.uris.first)
   end
 end
 

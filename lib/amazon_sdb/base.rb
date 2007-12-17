@@ -1,7 +1,7 @@
 module Amazon
   module SDB
     SIGNATURE_VERSION = '1'
-    API_VERSION = '2006-08-11'
+    API_VERSION = '2007-11-07'
     
     ##
     # The Amazon::SDS::Base class is the top-level interface class for your SDS interactions. It allows you to set global
@@ -44,19 +44,19 @@ module Amazon
       # Retrieves a list of domains in your SDS database. Each entry is a Domain object.
       def domains
         domains = []
-        moreToken = nil
-        base_options = {:Action => 'List'}
+        nextToken = nil
+        base_options = {:Action => 'ListDomains'}
         continue = true
         
         while continue
           options = base_options.dup
-          options[:MoreToken] = moreToken unless moreToken.nil?
+          options[:NextToken] = nextToken unless nextToken.nil?
           
-          sds_query(base_path, options) do |h|
-            h.search('//Domain/Name').each {|e| domains << Domain.new(@access_key, @secret_key, e.innerText)}
-            mt = h.at('//MoreToken')
+          sdb_query(options) do |h|
+            h.search('//DomainName').each {|e| domains << Domain.new(@access_key, @secret_key, e.innerText)}
+            mt = h.at('//NextToken')
             if mt
-              moreToken = mt.innerText
+              nextToken = mt.innerText
             else
               continue = false
             end
@@ -72,26 +72,31 @@ module Amazon
         Domain.new(@access_key, @secret_key, name)
       end
 
+      def raise_errors(hpricot)
+        errnode = hpricot.at('//Errors/Error')
+        return unless errnode
+        
+        msg = errnode.at('Message').innerText
+        case errnode.at('Code').innerText
+        when 'InvalidParameterValue'
+          raise InvalidParameterError, msg
+        when 'NumberDomainsExceeded'
+          raise DomainLimitError, msg
+        else
+          raise UnknownError, msg
+        end
+      end
+      
       def create_domain(name)
-        sds_query(base_path, {:Action => 'Create', 'Name' => name}) do |h|
-          if h.search('//Success').any?
-            domain(name)
-          else
-            # error?
-          end
+        sdb_query({:Action => 'CreateDomain', 'DomainName' => name}) do |h|
+          domain(name)
         end
       end
 
       ##
       # Deletes a domain. This operation is currently not supported by SDS.
-      def delete_domain(name)
-        sds_query(base_path, {:Action => 'Delete', 'Name' => name}) do |h|
-          if h.search('//Success').any?
-            return domain(name)
-          else
-            # error?
-          end
-        end       
+      def delete_domain!(name)
+        sdb_query({:Action => 'DeleteDomain', 'DomainName' => name})
       end
 
       def timestamp
@@ -102,7 +107,18 @@ module Amazon
         Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::Digest.new('sha1'), key, msg))
       end
 
-      def sds_query(base_url, options    = {})
+      def cgi_encode(options) 
+        options.map do |k, v| 
+          case v
+          when Array
+            v.map{|i| Base.uriencode(k)+'='+Base.uriencode(i)}.join('&')
+          else
+            Base.uriencode(k)+'='+Base.uriencode(v)
+          end
+        end.join('&')
+      end
+
+      def sdb_query(options = {})
         options.merge!({'AWSAccessKeyId' => @access_key,
           'SignatureVersion'             => SIGNATURE_VERSION,
           'Timestamp'                    => timestamp,
@@ -110,14 +126,14 @@ module Amazon
         options['Signature'] = Base.sign(@secret_key, options)
 
         # send to S3
-        url = base_url + '?' + options.map {|k, v| Base.uriencode(k)+'='+Base.uriencode(v)}.join('&')
+        url = BASE_PATH + '?' + cgi_encode(options)
 
         # puts "Requesting #{url}" #if $DEBUG
         open(url) do |f|
           h = Hpricot.XML(f)
 
-          # TODO: check for error
-          yield h
+          raise_errors h
+          yield h if block_given?
         end
       end
 
@@ -134,9 +150,7 @@ module Amazon
       @@number_padding                 = 32
       @@float_precision                = 8
 
-      def base_path
-        'http://sds.amazonaws.com/'
-      end
+      BASE_PATH = 'http://sdb.amazonaws.com/'
     end
   end
 end
