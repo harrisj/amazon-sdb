@@ -81,7 +81,11 @@ module Amazon
         if k.nil? || options[:replace]
           @mset[key] = value
         else
-          @mset[key] = @mset[key].to_a + [value]
+          if @mset[key].is_a? Array
+            @mset[key] << value
+          else
+            @mset[key] = [@mset[key], value]
+          end
         end
       end
       
@@ -154,7 +158,7 @@ module Amazon
       end
 
       def string_escape(str)
-        str.gsub("\\", "\\\\").gsub("'", "\\'")
+        str.gsub('\\') {|c| "#{c}#{c}"}.gsub('\'') {|c| "\\#{c}"}
       end
       
       def sdb_key_escape(key)
@@ -183,11 +187,16 @@ module Amazon
 
       ##
       # Outputs a multimap to sdb using Amazon's query-string notation (and doing auto-conversions of int and date values)
-      def to_sdb
+      def to_sdb(options={})
         out = {}
+        
         self.each_pair_with_index do |key, value, index|
           out["Attribute.#{index}.Name"] = sdb_key_escape(key)
           out["Attribute.#{index}.Value"] = sdb_value_escape(value)
+          
+          if options.key?(:replace) && (options[:replace] == :all || [*options[:replace]].find {|x| x.to_s == key })
+            out["Attribute.#{index}.Replace"] = "true"
+          end
         end
 
         out

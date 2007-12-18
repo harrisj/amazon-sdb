@@ -3,6 +3,10 @@ by Jacob Harris
 jharris@nytimes.com
 http://open.nytimes.com/
 
+== SOURCE CODE:
+
+http://code.nytimes.com/svn/ruby/gems/amazon_sdb
+
 == DESCRIPTION:
   
 Amazon sdb is a Ruby wrapper to Amazon's new Simple Database Service. Amazon sdb is a different type of database:
@@ -16,12 +20,19 @@ Amazon sdb is a Ruby wrapper to Amazon's new Simple Database Service. Amazon sdb
 * In addition to key-driven accessors, objects can also be searched with a basic query language.
 * All value are stored as strings and comparisons use lexical order. Thus, it is necessary to pad integers and floats with 0s and save dates in ISO 8601 format for query comparisons to work
 
-== FEATURES/PROBLEMS:
+== FEATURES:
   
 * A basic interface to Amazon sdb
 * Includes a class for representing attribute sets in sdb
 * Automatic conversion to/from sdb representations for integers and dates (for floats, it's suggested you use the Multimap#numeric function)
 * The beginnings of mock-based tests for methods derived from Amazon's docs
+
+== CAVEATS
+
+* Not all features are tested yet (sorry!)
+* Amazon has not actually opened up access to the 2007-11-07 API on which this gem is based (and my tests are for). Some things may work differently in real life.
+* Errors still need to be figured out / tested.
+* I don't process the data usage/costs info from Amazon yet.
 
 == FUTURE WORK:
 

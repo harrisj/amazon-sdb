@@ -24,25 +24,22 @@ module Amazon
       # Takes the following arguments:
       # - key - a string key for the attribute set
       # - multimap - an collection of attributes for the set in a Multimap object. If nothing, creates an empty set.
+      # - options - for put options
       def put_attributes(key, multimap=nil, options = {})
-        options = {'Action' => 'PutAttributes', 'DomainName' => name, 'ItemName' => key}
+        req_options = {'Action' => 'PutAttributes', 'DomainName' => name, 'ItemName' => key}
         
         unless multimap.nil?
-          options.merge! case multimap
+          req_options.merge! case multimap
           when Hash, Array
-            Multimap.new(multimap).to_sdb
+            Multimap.new(multimap).to_sdb(options)
           when Multimap
-            multimap.to_sdb
+            multimap.to_sdb(options)
           else
             raise ArgumentError, "The second argument must be a multimap, hash, or array"
           end
         end
         
-#        if mode == :replace
-#          options.merge!({'Replace' => 'true'})
-#        end
-        
-        sdb_query(options) do |h|
+        sdb_query(req_options) do |h|
           # check for success?
           if h.search('//Success').any?
             return Item.new(self, key, multimap)
@@ -80,10 +77,23 @@ module Amazon
       ##
       # Not implemented yet.
       def delete_attributes(key, multimap=nil)
-        options = {'Action' => 'Delete'}
+        options = {'Action' => 'DeleteAttributes', 'DomainName' => name, 'ItemName' => key}
         
         unless multimap.nil?
-        
+          case multimap
+          when String, Symbol
+            options.merge! "Attribute.0.Name" => multimap.to_s
+          when Array
+            multimap.each_with_index do |k, i|
+              options["Attribute.#{i}.Name"] = k
+            end
+          when Hash
+            options.merge! Multimap.new(multimap).to_sdb
+          when Multimap
+            options.merge! multimap.to_sdb
+          else
+            raise ArgumentError, "Bad input paramter for attributes"
+          end
         end
         
         sdb_query(options) do |h|

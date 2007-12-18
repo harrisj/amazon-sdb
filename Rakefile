@@ -3,9 +3,9 @@
 require 'rubygems'
 require 'hoe'
 require './lib/amazon_sdb.rb'
-
+require 'rcov/rcovtask'
 Hoe.new('amazon_sdb', Amazon::SDB::VERSION) do |p|
-  p.rubyforge_name = 'amazon_sdb'
+  p.rubyforge_name = 'nytimes'
   p.author = 'Jacob Harris'
   p.email = 'harrisj@nytimes.com'
   p.summary = 'A ruby wrapper to Amazon\'s sdb service'
@@ -15,4 +15,9 @@ Hoe.new('amazon_sdb', Amazon::SDB::VERSION) do |p|
   p.extra_deps << ['hpricot', '>= 0.6']
 end
 
+Rcov::RcovTask.new do |t|
+  t.test_files = FileList['test/test*.rb']
+  t.rcov_opts << "-Ilib:test"
+  t.verbose = true     # uncomment to see the executed command
+end
 # vim: syntax=Ruby

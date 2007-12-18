@@ -27,12 +27,6 @@ class TestAmazonBase < Test::Unit::TestCase
     assert_equal 'foo=bar', @sdb.cgi_encode(options)
   end
   
-  def test_cgi_encode_escapes
-    options = {'a\'b' => 'c\\d'}
-    
-    assert_equal 'a\\\'b=c\\\\d', @sdb.cgi_encode(options)
-  end
-  
   def test_cgi_encode_array
     options = {"foo" => ["bar", "baz"]}
     assert_equal 'foo=bar&foo=baz', @sdb.cgi_encode(options)
@@ -139,4 +133,3 @@ class TestAmazonBase < Test::Unit::TestCase
     assert_in_url_query({'Action' => 'DeleteDomain', 'DomainName' => 'foo'}, @sdb.uris.first)
   end
 end
-

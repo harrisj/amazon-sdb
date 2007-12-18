@@ -98,7 +98,7 @@ class TestMultimap < Test::Unit::TestCase
     @m['Num'] = 12
     Amazon::SDB::Base.number_padding = 6
     
-    assert_equal '000012', @m.to_sdb['Value0']
+    assert_equal '000012', @m.to_sdb['Attribute.0.Value']
   end
   
   def test_numeric
@@ -106,8 +106,33 @@ class TestMultimap < Test::Unit::TestCase
     assert_equal '00012.3400', @m['Num']
   end
     
+  def test_to_sdb_replace_all
+    @m[:a] = "foo"
+    @m[:b] = "bar"
+    
+    out = @m.to_sdb({:replace => :all})
+    assert out.key?('Attribute.0.Replace')
+    assert out.key?('Attribute.1.Replace')
+  end
+  
+  def test_to_sdb_replace_by_name
+    @m[:a] = "foo"
+    
+    out = @m.to_sdb({:replace => 'a'})
+    assert out.key?('Attribute.0.Replace')
+  end
+  
   def test_delete_pair
     
+  end
+  
+  def test_char_escape
+    @m["a\'b"] = "c\\d"
+    
+    out = @m.to_sdb
+    
+    assert_equal 'a\\\'b', out["Attribute.0.Name"]
+    assert_equal 'c\\\\d', out["Attribute.0.Value"]
   end
   
   def test_method_missing_get

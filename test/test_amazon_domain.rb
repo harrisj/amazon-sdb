@@ -34,14 +34,10 @@ class TestAmazonDomain < Test::Unit::TestCase
     @attr_hash = {"foo" => "bar", "baz" => "quux"}
   end
   
-  def test_get_attributes
-    domain = @sdb
-  end
-  
   def test_no_such_domain_error
-    @domain.responses << error_response('NoSuchDomain', 'No such domain found')
+#    @domain.responses << error_response('NoSuchDomain', 'No such domain found')
         
-    assert_raise(DomainNotFoundError) { @domain.get_attributes() }
+#    assert_raise(DomainNotFoundError) { @domain.get_attributes() }
   end
   
   def test_put_attributes
@@ -74,7 +70,9 @@ class TestAmazonDomain < Test::Unit::TestCase
   def test_put_attributes_replace_all
     @domain.responses << generic_response('PutAttributes')
     
-    @domain.put_attributes 'item_key', @attr_hash, :replace => :all
+    m = Amazon::SDB::Multimap.new @attr_hash
+    
+    @domain.put_attributes 'item_key', m, :replace => :all
     
     assert_in_url_query({'Attribute.0.Replace' => 'true', 'Attribute.1.Replace' => 'true'}, @domain.uris.first)
   end
@@ -115,6 +113,35 @@ class TestAmazonDomain < Test::Unit::TestCase
     assert_in_url_query({'AttributeName' => ['attr1','attr2']}, @domain.uris.first)
   end
   
+  def test_delete_attributes_all
+    @domain.responses << generic_response('DeleteAttributes')
+    
+    @domain.delete_attributes 'key'
+    
+    assert_equal 1, @domain.uris.length
+    assert_in_url_query({'Action' => 'DeleteAttributes', 'DomainName' => @domain.name, 'ItemName' => 'key'}, @domain.uris.first)
+  end
+  
+  def test_delete_attributes_name
+    @domain.responses << generic_response('DeleteAttributes')
+    
+    @domain.delete_attributes 'key', 'foo'
+    
+    assert_equal 1, @domain.uris.length
+    assert_in_url_query({'Action' => 'DeleteAttributes', 'DomainName' => @domain.name, 'ItemName' => 'key'}, @domain.uris.first)
+    assert_in_url_query({'Attribute.0.Name' => 'foo'}, @domain.uris.first)        
+  end
+  
+  def test_delete_attributes_name_value
+    @domain.responses << generic_response('DeleteAttributes')
+    
+    @domain.delete_attributes 'key', {'foo' => 'bar'}
+    
+    assert_equal 1, @domain.uris.length
+    assert_in_url_query({'Action' => 'DeleteAttributes', 'DomainName' => @domain.name, 'ItemName' => 'key'}, @domain.uris.first)
+    assert_in_url_query({'Attribute.0.Name' => 'foo', 'Attribute.0.Value' => 'bar'}, @domain.uris.first)    
+  end
+  
   def test_query_all
     @domain.responses << QUERY_RESPONSE
     
@@ -138,13 +165,21 @@ class TestAmazonDomain < Test::Unit::TestCase
     assert_in_url_query({'MaxNumberOfItems' => '3'}, @domain.uris.first)    
   end
   
+  def test_query_next_token
+    @domain.responses << QUERY_RESPONSE
+    
+    @domain.query :next_token => 'FOOBAR'
+    assert_equal 1, @domain.uris.length
+    assert_in_url_query({'NextToken' => 'FOOBAR'}, @domain.uris.first)
+  end
+  
   def test_query_expr
     @domain.responses << QUERY_RESPONSE
     
     @domain.query :expr => "['last_name' = 'Harris']"
     
-    assert_equal, @domain.uris.length
-    assert_in_url_query('QueryExpression' => "['last_name' = 'Harris']", @domain.uris.first)
+    assert_equal 1, @domain.uris.length
+    assert_in_url_query({'QueryExpression' => "['last_name' = 'Harris']"}, @domain.uris.first)
   end
   
   def test_list_items_load
