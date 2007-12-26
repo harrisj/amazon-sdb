@@ -115,14 +115,14 @@ class TestAmazonBase < Test::Unit::TestCase
   def test_create_domain_invalid_param
     @sdb.responses << error_response('InvalidParameterValue', 'Value (X) for parameter DomainName is invalid.')
 
-    assert_raise(Amazon::SDB::InvalidParameterError) { @sdb.create_domain('(X)') }
+    assert_raise(Amazon::SDB::ParameterError) { @sdb.create_domain('(X)') }
     assert_equal 1, @sdb.uris.length
   end
   
   def test_create_domain_limit_error
     @sdb.responses << error_response('NumberDomainsExceeded', 'Domain Limit reached')
     
-    assert_raise(Amazon::SDB::DomainLimitError) { @sdb.create_domain('foo') }
+    assert_raise(Amazon::SDB::LimitError) { @sdb.create_domain('foo') }
   end
   
   def test_delete_domain

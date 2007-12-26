@@ -76,12 +76,27 @@ module Amazon
         errnode = hpricot.at('//Errors/Error')
         return unless errnode
         
-        msg = errnode.at('Message').innerText
-        case errnode.at('Code').innerText
-        when 'InvalidParameterValue'
-          raise InvalidParameterError, msg
-        when 'NumberDomainsExceeded'
-          raise DomainLimitError, msg
+        code = errnode.at('Code').innerText
+        msg = "#{code}: #{errnode.at('Message').innerText}"
+
+        if AUTH_ERROR_CODES.include? code
+          raise AuthError, msg
+        elsif ACCESS_ERROR_CODES.include? code
+          raise AccessError, msg
+        elsif PARAMETER_ERROR_CODES.include? code
+          raise ParameterError, msg
+        elsif QUERY_ERROR_CODES.include? code
+          raise QuerySyntaxError, msg
+        elsif LIMIT_ERROR_CODES.include? code
+          raise LimitError, msg
+        elsif REQUEST_ERROR_CODES.include? code
+          raise RequestError, msg
+        elsif SERVER_ERROR_CODES.include? code
+          raise ServerError, msg
+        elsif TIMEOUT_ERROR_CODES.include? code
+          raise TimeoutError, msg
+        elsif VERSION_ERROR_CODES.include? code
+          raise VersionError, msg
         else
           raise UnknownError, msg
         end

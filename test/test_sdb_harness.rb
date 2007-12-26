@@ -25,7 +25,9 @@ class Amazon::SDB::Base
 end
 
 class Test::Unit::TestCase
-  def error_response(code, msg)
+  def error_response(code, msg=nil)
+    msg ||= "ERROR MESSAGE"
+    
     "<Response> 
     <Errors> 
     <Error> 
