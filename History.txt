@@ -1,3 +1,8 @@
+== 0.6.0 / 2007-12-28
+* 2 major enhancements
+  * Correct error handling for API's HTTP responses (with tests)
+  * I now have Amazon::SimpleDB, so I can see if it works or not
+
 == 0.5.5 / 2007-12-15
 
 * 2 major enhancements

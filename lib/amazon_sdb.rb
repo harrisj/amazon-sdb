@@ -33,7 +33,7 @@ require 'amazon_sdb/exceptions'
 
 module Amazon
   module SDB
-    VERSION = '0.5.5'    
+    VERSION = '0.6.0'    
   end
 end
 
