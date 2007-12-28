@@ -7,7 +7,7 @@ module Amazon
     class AccessError < Error
     end
     
-    AUTH_ERROR_CODES = %w{AuthFailure AuthMissingFailure InvalidHTTPAuthHeader}
+    AUTH_ERROR_CODES = %w{AuthFailure AuthMissingFailure InvalidHTTPAuthHeader OptInRequired}
     class AuthError < Error
     end
     

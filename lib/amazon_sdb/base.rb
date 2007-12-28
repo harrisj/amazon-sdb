@@ -144,11 +144,16 @@ module Amazon
         url = BASE_PATH + '?' + cgi_encode(options)
 
         # puts "Requesting #{url}" #if $DEBUG
-        open(url) do |f|
-          h = Hpricot.XML(f)
+        begin
+          open(url) do |f|
+            h = Hpricot.XML(f)
 
+            raise_errors h
+            yield h if block_given?
+          end
+        rescue OpenURI::HTTPError => e
+          h = Hpricot.XML(e.io.read)
           raise_errors h
-          yield h if block_given?
         end
       end
 
