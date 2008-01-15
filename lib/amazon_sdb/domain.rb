@@ -22,9 +22,9 @@ module Amazon
       ##
       # Sets attributes for a given key in the domain. If there are no attributes supplied, it creates an empty set.
       # Takes the following arguments:
-      # - key - a string key for the attribute set
-      # - multimap - an collection of attributes for the set in a Multimap object. If nothing, creates an empty set.
-      # - options - for put options
+      # - <tt>key</tt> - a string key for the attribute set
+      # - <tt>multimap</tt> - an collection of attributes for the set in a Multimap object (can convert a Hash and Array too). If nothing, creates an empty set.
+      # - <tt>options</tt> - for put options. Currently the only option is :replace, which either takes an array of attribute names to replace or :all for all of them
       def put_attributes(key, multimap=nil, options = {})
         req_options = {'Action' => 'PutAttributes', 'DomainName' => name, 'ItemName' => key}
         
@@ -52,6 +52,7 @@ module Amazon
       ##
       # Gets the attribute list for a key. Arguments:
       # - <tt>key</tt> - the key for the attribute set
+      # - <tt>attr_list</tt> - by default, this function returns all the attributes of an item. If you wanted to limit the response to only a few named attributes, you can pass them here.
       def get_attributes(key, *attr_list)
         options = {'Action' => 'GetAttributes', 'DomainName' => name, 'ItemName' => key}
         
@@ -75,7 +76,9 @@ module Amazon
       end
 
       ##
-      # Not implemented yet.
+      # Deletes the attributes associated with a particular item. If the optional <tt>multimap</tt> argument is nil, deletes the entire
+      # object. Otherwise, the optional multimap argument can be used to delete specific key/value pairs in the object (also accepts
+      # a String or Symbol for a single name, an Array for multiple keys or a Hash for key/value pairs)
       def delete_attributes(key, multimap=nil)
         options = {'Action' => 'DeleteAttributes', 'DomainName' => name, 'ItemName' => key}
         
@@ -106,9 +109,10 @@ module Amazon
       ##
       # Returns a list of matching items that match a filter
       # Options include:
-      # - <tt>max_results</tt> = the max items to return for a listing (top/default is 100)
-      # - <tt>:more_token</tt> = to retrieve a second or more page of results, the more token should be provided
-      # - <tt>:load_attrs</tt> = this query normally returns just a list of names, the attributes have to be retrieved separately. To load the attributes for matching results automatically, set to true (normally false)
+      # - <tt>:expr</tt> - a query expression to evaluate (see the Amazon SimpleDB documentation for details)
+      # - <tt>:max_results</tt> - the max items to return for a listing (top/default is 100)
+      # - <tt>:next_token</tt> - to retrieve a second or more page of results, the more token should be provided
+      # - <tt>:load_attrs</tt> - this query normally returns just a list of names, the attributes have to be retrieved separately. To load the attributes for matching results automatically, set to true (normally false). Be aware this will lead to N additional requests to SimpleDB.
       def query(query_options = {})
         req_options = {'Action' => 'Query', 'DomainName' => name}
         

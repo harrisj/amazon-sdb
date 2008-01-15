@@ -9,11 +9,11 @@ http://code.nytimes.com/svn/ruby/gems/amazon_sdb
 
 == DESCRIPTION:
   
-Amazon sdb is a Ruby wrapper to Amazon's new Simple Database Service. Amazon sdb is a different type of database:
+Amazon SDB is a Ruby wrapper to Amazon's new Simple Database Service. Amazon sdb is a different type of database:
 
 * Accessed over the network via RESTful calls
 * No schemas or types
-* Each sdb account can have up to 100 domains for data.
+* Each SimpleDB account can have up to 100 domains for data.
 * Domains can hold objects referenced by unique keys
 * Each object can hold up to 256 name/value attributes.
 * Only name/value pairs must be unique in an objects attributes, there can be multiple name/value attributes with the same name.
@@ -22,9 +22,9 @@ Amazon sdb is a Ruby wrapper to Amazon's new Simple Database Service. Amazon sdb
 
 == FEATURES:
   
-* A basic interface to Amazon sdb
-* Includes a class for representing attribute sets in sdb
-* Automatic conversion to/from sdb representations for integers and dates (for floats, it's suggested you use the Multimap#numeric function)
+* A basic interface to Amazon SimpleDB
+* Includes a class for representing attribute sets in SimpleDB
+* Automatic conversion to/from SimpleDB representations for integers and dates (for floats, it's suggested you use the Multimap#numeric function)
 * The beginnings of mock-based tests for methods derived from Amazon's docs
 
 == CAVEATS
@@ -41,7 +41,7 @@ Amazon sdb is a Ruby wrapper to Amazon's new Simple Database Service. Amazon sdb
 
 == SYNOPSIS:
 
-  b = Amazon::sdb::Base.new(aws_public_key, aws_secret_key)
+  b = Amazon::SDB::Base.new(aws_public_key, aws_secret_key)
 	b.domains #=> list of domain
 	domain = b.create_domain 'my domain'
 	

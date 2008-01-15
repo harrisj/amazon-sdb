@@ -172,6 +172,10 @@ module Amazon
 
       def sdb_value_escape(value)
         case value
+        when TrueClass
+          "true"
+        when FalseClass
+          "false"
         when Fixnum
           sprintf("%0#{Base.number_padding}d", value)
         when Float
@@ -204,6 +208,10 @@ module Amazon
 
       def coerce(value)
         case value
+        when 'true'
+          true
+        when 'false'
+          false
         when /^0+\d+$/
           value.to_i
         when /^0+\d*.\d+$/

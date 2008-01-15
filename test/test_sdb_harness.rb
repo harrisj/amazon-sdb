@@ -9,6 +9,7 @@ class Amazon::SDB::Base
   def initialize(aws_access_key, aws_secret_key)
     @access_key = aws_access_key
     @secret_key = aws_secret_key
+    @usage = Amazon::SDB::Usage.new
     @responses = []
     @uris = []  
   end

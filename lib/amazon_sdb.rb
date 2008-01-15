@@ -30,6 +30,7 @@ require 'amazon_sdb/domain'
 require 'amazon_sdb/item'
 require 'amazon_sdb/resultset'
 require 'amazon_sdb/exceptions'
+require 'amazon_sdb/usage'
 
 module Amazon
   module SDB

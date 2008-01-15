@@ -1,7 +1,7 @@
 module Amazon
   module SDB
     ##
-    # An item from sdb. This basically is a key for the item in the domain and a Multimap of the attributes. You should never
+    # An item from SimpleDB. This basically is a key for the item in the domain and a Multimap of the attributes. You should never
     # call Item#new, instead it is returned by various methods in Domain and ResultSet
     class Item
       include Enumerable
@@ -13,23 +13,34 @@ module Amazon
         @attributes = multimap
       end
       
+      ##
+      # Reloads from the domain
       def reload!
         item = @domain.get_attributes(@key)
         @attributes = item.attributes
       end
       
+      ##
+      # Returns true if the attributes are empty
       def empty?
+        return true if @attributes.nil?
         @attributes.size == 0
       end
       
+      ##
+      # Deletes the item in SimpleDB
       def destroy!
         @domain.delete_attributes(@key)
       end
       
+      ##
+      # Saves the item back (like a put_attributes with :replace => :all
       def save
-        @domain.put_attributes(@key, @attributes)
+        @domain.put_attributes(@key, @attributes, :replace => :all)
       end
       
+      ##
+      # Reloads the item if necessary
       def get(key)
         reload! if @attributes.nil?
         @attributes.get(key)

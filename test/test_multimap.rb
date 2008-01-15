@@ -105,6 +105,12 @@ class TestMultimap < Test::Unit::TestCase
     @m['Num'] = Amazon::SDB::Multimap.numeric(12.34, 10, 4)
     assert_equal '00012.3400', @m['Num']
   end
+  
+  def test_boolean_to_sdb
+    @m['a'] = true
+   
+    assert_equal 'true', @m.to_sdb['Attribute.0.Value']
+  end
     
   def test_to_sdb_replace_all
     @m[:a] = "foo"
@@ -164,6 +170,14 @@ class TestMultimap < Test::Unit::TestCase
     
     assert_in_delta(34.34, m["a"], 2 ** -20)
     assert_equal "0000000000034.3400000000", m.get("a", :before_cast => true)
+  end
+  
+  def test_coerce_boolean
+    m = Multimap.new
+    m.from_sdb([["a", "true"], ["b", "false"]])
+  
+    assert_equal true, m["a"]
+    assert_equal false, m["b"]
   end
   
   def test_coerce_datetime

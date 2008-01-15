@@ -15,6 +15,8 @@ module Amazon
       def initialize(aws_access_key, aws_secret_key)
         @access_key = aws_access_key
         @secret_key = aws_secret_key
+        @usage = Usage.new
+        raise @usage
       end
 
       ##
@@ -32,16 +34,42 @@ module Amazon
         @@number_padding = num
       end
       
+      ##
+      # The number of digits after the decimal points to use by default
       def self.float_precision
         return @@float_precision
       end
       
+      ##
+      # Set the #float_precision
       def self.float_precision=(num)
         return @@float_precision
       end
 
       ##
-      # Retrieves a list of domains in your SDS database. Each entry is a Domain object.
+      # Returns the Box Usage accumulated since the beginning of the session. Box Usage represents computation time and is one of
+      # the parameters in your monthly SimpleDB bill. As an alternative, when passed a block (no parameters yielded), it returns 
+      # the box usage only for the operations within the block.
+      def box_usage
+        unless block_given?
+          @usage.box_usage
+        else
+          # return the usage of the actions in the block
+          usage1 = @usage.box_usage
+          yield
+          usage2 = @usage.box_usage
+          return usage2 - usage1
+        end
+      end
+      
+      ##
+      # Resets the box usage accumulated within the current session. Not sure why you'd need to do this, but it's provided.
+      def reset_usage!
+        @usage.reset!
+      end
+
+      ##
+      # Retrieves a list of domains in your SDS database. Each entry is a Domain object. 
       def domains
         domains = []
         nextToken = nil
@@ -67,9 +95,34 @@ module Amazon
       end
 
       ##
-      # Returns a domain object for SDS. Assumes the domain already exists, so errors might occur if you didn't create it.
+      # Returns a domain object for SimpleDB. Assumes the domain already exists, so a ParameterError (NoSuchDomain) might occur if it's not there. This
+      # method is useful for getting a domain object without having to incur the operational costs of querying all domains.
       def domain(name)
         Domain.new(@access_key, @secret_key, name)
+      end
+      
+      ##
+      # Creates a domain. This operation is idempotent, but it is slow and if you are sure the domain already exists, you might
+      # want to use the #domain method instead. Each SimpleDB account is allowed up to 100 domains; a LimitError will be raised
+      # if you attempt to create more.
+      def create_domain(name)
+        sdb_query({:Action => 'CreateDomain', 'DomainName' => name}) do |h|
+          domain(name)
+        end
+      end
+
+      ##
+      # Deletes a domain. Running this command multiple times or on a domain that does not exist will NOT return an error.
+      def delete_domain!(name)
+        sdb_query({:Action => 'DeleteDomain', 'DomainName' => name})
+      end
+
+    private
+      def parse_usage(hpricot)
+        usagenode = hpricot.at('//BoxUsage')
+        return unless usagenode
+        
+        @usage.add_usage usagenode.innerText.to_f
       end
 
       def raise_errors(hpricot)
@@ -102,18 +155,6 @@ module Amazon
         end
       end
       
-      def create_domain(name)
-        sdb_query({:Action => 'CreateDomain', 'DomainName' => name}) do |h|
-          domain(name)
-        end
-      end
-
-      ##
-      # Deletes a domain. This operation is currently not supported by SDS.
-      def delete_domain!(name)
-        sdb_query({:Action => 'DeleteDomain', 'DomainName' => name})
-      end
-
       def timestamp
         Time.now.iso8601
       end
@@ -148,11 +189,13 @@ module Amazon
           open(url) do |f|
             h = Hpricot.XML(f)
 
+            parse_usage h
             raise_errors h
             yield h if block_given?
           end
         rescue OpenURI::HTTPError => e
           h = Hpricot.XML(e.io.read)
+          parse_usage h
           raise_errors h
         end
       end
@@ -166,7 +209,6 @@ module Amazon
         return hmac(key, option_array.map {|pair| pair[0]+pair[1]}.join('')).chop
       end
 
-    private
       @@number_padding                 = 32
       @@float_precision                = 8
 
