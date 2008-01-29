@@ -34,7 +34,7 @@ require 'amazon_sdb/usage'
 
 module Amazon
   module SDB
-    VERSION = '0.6.5'    
+    VERSION = '0.6.7'    
   end
 end
 

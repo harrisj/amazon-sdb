@@ -1,3 +1,5 @@
+require 'forwardable'
+
 module Amazon
   module SDB
     
@@ -9,15 +11,19 @@ module Amazon
     # - 256 total attribute name-value pairs per item 
     # - 250 million attributes per domain 
     # - 10 GB of total user data storage per domain 
-    class Domain < Base
+    class Domain
+      extend Forwardable
+      
       attr_reader :name
       
       ##
       # Creates a new Domain object. 
-      def initialize(aws_access_key, aws_secret_key, name)
-        super(aws_access_key, aws_secret_key)
+      def initialize(base, name)
+        @base = base
         @name = name
       end
+      
+      def_delegator :@base, :sdb_query
       
       ##
       # Sets attributes for a given key in the domain. If there are no attributes supplied, it creates an empty set.

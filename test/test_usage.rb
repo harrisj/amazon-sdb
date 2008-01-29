@@ -110,4 +110,13 @@ class TestUsage < Test::Unit::TestCase
     
     assert_in_delta(0.26, usage, 2 ** -20)
   end
+  
+  def test_usage_is_updated_from_domain
+    d = @sdb.domain('testdb')
+    d.responses << generic_response('DeleteAttributes')
+    
+    d.delete_attributes 'key'
+    
+    assert_in_delta(GENERIC_RESPONSE_USAGE, @sdb.box_usage, 2 ** -20)
+  end
 end

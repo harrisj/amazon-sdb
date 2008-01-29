@@ -2,7 +2,8 @@ require "test_sdb_harness"
 
 class TestItem < Test::Unit::TestCase
   def setup
-    @domain = Amazon::SDB::Domain.new 'API_KEY', 'SECRET_KEY', 'testdb'
+    @base = Amazon::SDB::Base.new 'API_KEY', 'SECRET_KEY'
+    @domain = @base.domain 'testdb'
     @key = 'TEST_ITEM'
     @multimap = Amazon::SDB::Multimap.new({"foo" => "bar", "baz" => "quux"})
     
@@ -37,6 +38,9 @@ class TestItem < Test::Unit::TestCase
     @item.reload!
     
     assert_in_url_query({'Action' => 'GetAttributes', 'DomainName' => 'testdb', 'ItemName' => 'TEST_ITEM'}, @domain.uris.first)
+    assert_equal 'Blue', @item['Color']
+    assert_equal 'Med', @item['Size']
+    assert_equal '14', @item['Price']
   end
   
   def test_empty?
@@ -50,6 +54,13 @@ class TestItem < Test::Unit::TestCase
     
     @item.destroy!
     assert_in_url_query({'Action' => 'DeleteAttributes', 'DomainName' => 'testdb', 'ItemName' => 'TEST_ITEM'}, @domain.uris.first)
+  end
+  
+  def test_each
+  end
+  
+  def test_each_pair
+    
   end
 end
   

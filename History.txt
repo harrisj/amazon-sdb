@@ -1,3 +1,8 @@
+== 0.6.7 / 2008-01-26
+* 2 major enhancements
+  * removed stupid bug I added by accident
+  * domains report correct box usage
+
 == 0.6.5 / 2008-01-15
 * 3 major enhancements
   * New usage tracking via the box_usage method

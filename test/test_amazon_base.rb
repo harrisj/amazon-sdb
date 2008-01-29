@@ -24,12 +24,12 @@ class TestAmazonBase < Test::Unit::TestCase
   def test_cgi_encode
     options = {'foo' => 'bar'}
   
-    assert_equal 'foo=bar', @sdb.cgi_encode(options)
+    assert_equal 'foo=bar', @sdb.send(:cgi_encode, options)
   end
   
   def test_cgi_encode_array
     options = {"foo" => ["bar", "baz"]}
-    assert_equal 'foo=bar&foo=baz', @sdb.cgi_encode(options)
+    assert_equal 'foo=bar&foo=baz', @sdb.send(:cgi_encode, options)
   end
   
   def test_domains

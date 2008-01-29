@@ -65,6 +65,10 @@ module Amazon
         @size
       end
 
+      def empty?
+        size == 0
+      end
+      
       ##
       # Save a key/value attribute into the multimap. Takes additional options
       # - <tt>:replace => true</tt> remove any attributes with the same key before insert (otherwise, appends)

@@ -9,6 +9,7 @@ lib/amazon_sdb/item.rb
 lib/amazon_sdb/multimap.rb
 lib/amazon_sdb/resultset.rb
 lib/amazon_sdb/exceptions.rb
+lib/amazon_sdb/usage.rb
 test/test_amazon_base.rb
 test/test_amazon_domain.rb
 test/test_sdb_harness.rb

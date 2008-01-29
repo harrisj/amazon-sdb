@@ -30,7 +30,8 @@ EOF
 
 class TestAmazonDomain < Test::Unit::TestCase
   def setup
-    @domain = Amazon::SDB::Domain.new 'API_KEY', 'SECRET_KEY', 'testdb'
+    @sdb = Amazon::SDB::Base.new 'API_KEY', 'SECRET_KEY'
+    @domain = @sdb.domain('testdb')
     @attr_hash = {"foo" => "bar", "baz" => "quux"}
   end
   

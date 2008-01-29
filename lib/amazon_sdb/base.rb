@@ -16,7 +16,6 @@ module Amazon
         @access_key = aws_access_key
         @secret_key = aws_secret_key
         @usage = Usage.new
-        raise @usage
       end
 
       ##
@@ -81,7 +80,7 @@ module Amazon
           options[:NextToken] = nextToken unless nextToken.nil?
           
           sdb_query(options) do |h|
-            h.search('//DomainName').each {|e| domains << Domain.new(@access_key, @secret_key, e.innerText)}
+            h.search('//DomainName').each {|e| domains << Domain.new(self, e.innerText)}
             mt = h.at('//NextToken')
             if mt
               nextToken = mt.innerText
@@ -98,7 +97,7 @@ module Amazon
       # Returns a domain object for SimpleDB. Assumes the domain already exists, so a ParameterError (NoSuchDomain) might occur if it's not there. This
       # method is useful for getting a domain object without having to incur the operational costs of querying all domains.
       def domain(name)
-        Domain.new(@access_key, @secret_key, name)
+        Domain.new(self, name)
       end
       
       ##

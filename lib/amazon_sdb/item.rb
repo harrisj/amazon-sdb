@@ -1,16 +1,21 @@
+require 'delegate'
+
 module Amazon
   module SDB
     ##
     # An item from SimpleDB. This basically is a key for the item in the domain and a Multimap of the attributes. You should never
     # call Item#new, instead it is returned by various methods in Domain and ResultSet
-    class Item
+    class Item < DelegateClass(Multimap)
       include Enumerable
       attr_accessor :key, :attributes
       
       def initialize(domain, key, multimap=nil)
         @domain = domain
         @key = key
+        
+        multimap = Multimap.new if multimap.nil?
         @attributes = multimap
+        super(@attributes)
       end
       
       ##
@@ -19,13 +24,7 @@ module Amazon
         item = @domain.get_attributes(@key)
         @attributes = item.attributes
       end
-      
-      ##
-      # Returns true if the attributes are empty
-      def empty?
-        return true if @attributes.nil?
-        @attributes.size == 0
-      end
+    
       
       ##
       # Deletes the item in SimpleDB
@@ -42,7 +41,7 @@ module Amazon
       ##
       # Reloads the item if necessary
       def get(key)
-        reload! if @attributes.nil?
+        reload! if empty?
         @attributes.get(key)
       end
       
@@ -50,13 +49,13 @@ module Amazon
         get(key)
       end
       
-      def each
-        @attributes.each
-      end
-      
-      def each_pair
-        @attributes.each_pair
-      end
+      # def each
+      #   @attributes.each
+      # end
+      # 
+      # def each_pair
+      #   @attributes.each_pair
+      # end
     end
   end
 end

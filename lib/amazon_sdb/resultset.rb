@@ -1,3 +1,5 @@
+require 'delegate'
+
 module Amazon
   module SDB
     
@@ -6,16 +8,16 @@ module Amazon
     # a set of Items plus an operation to see if there is another set to be retrieved
     # and to load it on demand. When Amazon sees fit to add total results or other metadata
     # for queries that will also be included here.
-    class ResultSet
-      include Enumerable
+    class ResultSet < DelegateClass(Array)
       attr_reader :items
       
-      def initialize(domain, items, more_token = nil)
+      def initialize(domain, items, next_token = nil)
         @domain = domain
         @items = items
-        @more_token = more_token
+        super(@items)
+        @next_token = next_token
       end
-      
+           
       ##
       # Returns true if there is another result set to be loaded
       def more_items?
@@ -25,20 +27,17 @@ module Amazon
       ##
       # Not implemented yet
       def load_next!
+        if @more_token.nil?
+          @items = []
+        else
+          @items = @domain.query(:next_token => @next_token)
+        end
       end
       
       ##
       # Iterator through all the keys in this resultset
       def keys
         @items.map {|i| i.key }
-      end
-      
-      ##
-      # Support method for Enumerable. Iterates through the items in this set (NOT all the matching results for a query)
-      def each
-        @items.each do |i|
-          yield i
-        end
       end
     end
   end

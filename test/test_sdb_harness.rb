@@ -2,26 +2,40 @@ require "test/unit"
 require 'cgi'
 require "amazon_sdb"
 
-# little mock override of open for base (technique from Eric Hodel)
-class Amazon::SDB::Base
-  attr_accessor :uris, :responses
-  
-  def initialize(aws_access_key, aws_secret_key)
-    @access_key = aws_access_key
-    @secret_key = aws_secret_key
-    @usage = Amazon::SDB::Usage.new
-    @responses = []
-    @uris = []  
-  end
-  
-  def open(uri)
-    @uris << uri
-    
-    if @responses.size == 0
-      fail "Unexpected HTTP request #{uri}"
+module Amazon
+  module SDB
+    # little mock override of open for base (technique from Eric Hodel)
+    class Base
+      attr_accessor :uris, :responses
+
+      def initialize(aws_access_key, aws_secret_key)
+        @access_key = aws_access_key
+        @secret_key = aws_secret_key
+        @usage = Amazon::SDB::Usage.new
+        @responses = []
+        @uris = []  
+      end
+
+      def open(uri)
+        @uris << uri
+
+        if @responses.size == 0
+          fail "Unexpected HTTP request #{uri}"
+        end
+
+        yield StringIO.new(@responses.shift)
+      end
     end
     
-    yield StringIO.new(@responses.shift)
+    class Domain
+      def uris
+        @base.uris
+      end
+      
+      def responses
+        @base.responses
+      end
+    end
   end
 end
 
@@ -43,11 +57,13 @@ class Test::Unit::TestCase
     </Response>"
   end
   
+  GENERIC_RESPONSE_USAGE = "0.0000219907"
+  
   def generic_response(method)
     "<#{method}Response xmlns=\"http://sdb.amazonaws.com/doc/2007-11-07\"> 
     <ResponseMetadata> 
     <RequestId>490206ce-8292-456c-a00f-61b335eb202b</RequestId> 
-    <BoxUsage>0.0000219907</BoxUsage> 
+    <BoxUsage>#{GENERIC_RESPONSE_USAGE}</BoxUsage> 
     </ResponseMetadata> 
     </#{method}Response>"
   end
